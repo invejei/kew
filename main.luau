@@ -2,7 +2,7 @@ Library = {}
 SaveTheme = {}
 
 local themes = {
-	index = {'Dark', 'Amethyst'},
+	index = {'Dark'},
 	Amethyst = {
 		['Shadow'] = Color3.fromRGB(24, 24, 31),
 		['Background'] = Color3.fromRGB(29, 28, 38),
@@ -2783,6 +2783,125 @@ function Library:Window(p)
 			function New:Clear(t)
 				local n = t or nil
 				DropdownSelect:Clear(n)
+			end
+
+			return New
+		end
+
+		function Func:PlayerList(p)
+			local Callback = p.Callback or function() end
+
+			local PlayerListContainer = Instance.new("Frame")
+			local UIGridLayout = Instance.new("UIGridLayout")
+			local UIPadding = Instance.new("UIPadding")
+
+			PlayerListContainer.Name = "PlayerListContainer"
+			PlayerListContainer.Parent = ScrollingFrame_1
+			PlayerListContainer.BackgroundTransparency = 1
+			PlayerListContainer.Size = UDim2.new(1, 0, 0, 0)
+			PlayerListContainer.AutomaticSize = Enum.AutomaticSize.Y
+
+			UIGridLayout.Parent = PlayerListContainer
+			UIGridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+			UIGridLayout.CellSize = UDim2.new(0, 100, 0, 130)
+			UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+			UIPadding.Parent = PlayerListContainer
+			UIPadding.PaddingTop = UDim.new(0, 10)
+			UIPadding.PaddingBottom = UDim.new(0, 10)
+
+			local function CreateCard(player)
+				if PlayerListContainer:FindFirstChild(player.Name) then return end
+
+				local Card = Instance.new("ImageButton")
+				local UICorner = Instance.new("UICorner")
+				local Icon = Instance.new("ImageLabel")
+				local IconCorner = Instance.new("UICorner")
+				local Name = Instance.new("TextLabel")
+				local DisplayName = Instance.new("TextLabel")
+
+				Card.Name = player.Name
+				Card.Parent = PlayerListContainer
+				Card.BackgroundColor3 = Color3.fromRGB(29, 28, 38)
+				Card.Size = UDim2.new(0, 100, 0, 130)
+				Card.AutoButtonColor = true
+
+				addToTheme('Function.Button.Background', Card)
+
+				UICorner.CornerRadius = UDim.new(0, 8)
+				UICorner.Parent = Card
+
+				Icon.Name = "Icon"
+				Icon.Parent = Card
+				Icon.BackgroundTransparency = 1
+				Icon.Position = UDim2.new(0.5, -30, 0, 10)
+				Icon.Size = UDim2.new(0, 60, 0, 60)
+				Icon.Image = "rbxassetid://0"
+
+				task.spawn(function()
+					local content, isReady = pcall(function() 
+						return game:GetService("Players"):GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+					end)
+					if isReady and content then
+						Icon.Image = content
+					end
+				end)
+
+				IconCorner.CornerRadius = UDim.new(1, 0)
+				IconCorner.Parent = Icon
+
+				Name.Name = "Name"
+				Name.Parent = Card
+				Name.BackgroundTransparency = 1
+				Name.Position = UDim2.new(0, 5, 0, 75)
+				Name.Size = UDim2.new(1, -10, 0, 20)
+				Name.Font = Enum.Font.GothamBold
+				Name.Text = player.Name
+				Name.TextColor3 = Color3.fromRGB(255, 255, 255)
+				Name.TextSize = 11
+				Name.TextWrapped = true
+
+				addToTheme('Text & Icon', Name)
+
+				DisplayName.Name = "DisplayName"
+				DisplayName.Parent = Card
+				DisplayName.BackgroundTransparency = 1
+				DisplayName.Position = UDim2.new(0, 5, 0, 95)
+				DisplayName.Size = UDim2.new(1, -10, 0, 30)
+				DisplayName.Font = Enum.Font.Gotham
+				DisplayName.Text = player.DisplayName
+				DisplayName.TextColor3 = Color3.fromRGB(200, 200, 200)
+				DisplayName.TextSize = 10
+				DisplayName.TextWrapped = true
+				DisplayName.TextTransparency = 0.3
+
+				addToTheme('Text & Icon', DisplayName)
+
+				Card.MouseButton1Click:Connect(function()
+					Callback(player)
+				end)
+			end
+
+			for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+				CreateCard(player)
+			end
+
+			game:GetService("Players").PlayerAdded:Connect(CreateCard)
+			game:GetService("Players").PlayerRemoving:Connect(function(player)
+				if PlayerListContainer:FindFirstChild(player.Name) then
+					PlayerListContainer[player.Name]:Destroy()
+				end
+			end)
+
+			local New = {}
+			function New:Refresh()
+				for _, child in ipairs(PlayerListContainer:GetChildren()) do
+					if child:IsA("ImageButton") then child:Destroy() end
+				end
+				for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+					CreateCard(player)
+				end
 			end
 
 			return New
